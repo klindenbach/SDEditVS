@@ -34,26 +34,9 @@ namespace SDEditVS
         /// Command ID.
         /// </summary>
         public const int CheckoutCommandId = 0x0100;
-        public const int RevertIfUnchangedCommandId = 0x0101;
         public const int RevertCommandId = 0x0103;
         public const int CtxtCheckoutCommandId = 0x0104;
-        public const int CtxtRevertIfUnchangedCommandId = 0x0105;
         public const int CtxtRevertCommandId = 0x0106;
-        public const int Workspace1CommandId = 0x0107;
-        public const int Workspace2CommandId = 0x0108;
-        public const int Workspace3CommandId = 0x0109;
-        public const int Workspace4CommandId = 0x010A;
-        public const int Workspace5CommandId = 0x010B;
-        public const int Workspace6CommandId = 0x010C;
-        public const int DiffCommandId = 0x010D;
-        public const int CtxtDiffCommandId = 0x010E;
-        public const int HistoryCommandId = 0x010F;
-        public const int CtxtHistoryCommandId = 0x0110;
-        public const int RevisionGraphCommandId = 0x0111;
-        public const int CtxtRevisionGraphCommandId = 0x0112;
-        public const int TimelapseViewCommandId = 0x0113;
-        public const int CtxtTimelapseViewCommandId = 0x0114;
-        public const int WorkspaceUseEnvironmentCommandId = 0x115;
         public const int AddCommandId = 0x0116;
         public const int CtxtAddCommandId = 0x0117;
         public const int DeleteCommandId = 0x0118;
@@ -61,9 +44,8 @@ namespace SDEditVS
         public const int OpenInSDVCommandId = 0x011A;
         public const int CtxtOpenInSDVCommandId = 0x011B;
 
-        public readonly int[] CommandIds = { CheckoutCommandId, RevertIfUnchangedCommandId, RevertCommandId, DiffCommandId, HistoryCommandId, RevisionGraphCommandId, TimelapseViewCommandId, AddCommandId, DeleteCommandId, OpenInSDVCommandId };
-        public readonly int[] CtxtCommandIds = { CtxtCheckoutCommandId, CtxtRevertIfUnchangedCommandId, CtxtRevertCommandId, CtxtDiffCommandId, CtxtHistoryCommandId, CtxtRevisionGraphCommandId, CtxtTimelapseViewCommandId, CtxtAddCommandId, CtxtDeleteCommandId, CtxtOpenInSDVCommandId };
-        public readonly int[] WorkspaceCommandIds = { WorkspaceUseEnvironmentCommandId, Workspace1CommandId, Workspace2CommandId, Workspace3CommandId, Workspace4CommandId, Workspace5CommandId, Workspace6CommandId };
+        public readonly int[] CommandIds = { CheckoutCommandId, RevertCommandId, AddCommandId, DeleteCommandId, OpenInSDVCommandId };
+        public readonly int[] CtxtCommandIds = { CtxtCheckoutCommandId, CtxtRevertCommandId, CtxtAddCommandId, CtxtDeleteCommandId, CtxtOpenInSDVCommandId };
 
         private static readonly string ADDIN_NAME = "SDEditVS";
         private static readonly string SUCCESS_PREFIX = "(\u2713) ";
@@ -117,15 +99,6 @@ namespace SDEditVS
                 var menuCommandID = new CommandID(CommandSet, cmdId);
                 var menuItem = new OleMenuCommand(this.Execute, menuCommandID);
                 menuItem.BeforeQueryStatus += new EventHandler(OnBeforeQueryStatusCtxt);
-                menuItem.Visible = true;
-                commandService.AddCommand(menuItem);
-            }
-
-            foreach (var cmdId in WorkspaceCommandIds)
-            {
-                var menuCommandID = new CommandID(CommandSet, cmdId);
-                var menuItem = new OleMenuCommand(this.ExecuteWorkspace, menuCommandID);
-                menuItem.BeforeQueryStatus += new EventHandler(OnBeforeQueryStatusWorkspace);
                 menuItem.Visible = true;
                 commandService.AddCommand(menuItem);
             }
@@ -325,29 +298,9 @@ namespace SDEditVS
                 case CtxtCheckoutCommandId:
                     return "Checkout";
 
-                case RevertIfUnchangedCommandId:
-                case CtxtRevertIfUnchangedCommandId:
-                    return "Revert If Unchanged";
-
                 case RevertCommandId:
                 case CtxtRevertCommandId:
                     return "Revert";
-
-                case DiffCommandId:
-                case CtxtDiffCommandId:
-                    return "Diff Against Have Revision";
-
-                case HistoryCommandId:
-                case CtxtHistoryCommandId:
-                    return "History";
-
-                case TimelapseViewCommandId:
-                case CtxtTimelapseViewCommandId:
-                    return "Time-lapse View";
-
-                case RevisionGraphCommandId:
-                case CtxtRevisionGraphCommandId:
-                    return "Revision Graph";
 
                 case AddCommandId:
                 case CtxtAddCommandId:
@@ -406,48 +359,11 @@ namespace SDEditVS
                         command.Enabled = useReadOnlyFlag ? isReadOnly : true;
                     }
                     break;
-                case RevertIfUnchangedCommandId:
-                case CtxtRevertIfUnchangedCommandId:
-                    {
-                        string text = GetCommandText(command.CommandID.ID);
-
-                        command.Text = command.Enabled ? string.Format("{0}\t\t{1}", text, name) : text;
-                        command.Enabled = useReadOnlyFlag ? !isReadOnly : true;
-                    }
-                    break;
                 case RevertCommandId:
                 case CtxtRevertCommandId:
                     {
                         command.Text = GetCommandText(command.CommandID.ID);
                         command.Enabled = useReadOnlyFlag ? !isReadOnly : true;
-                    }
-                    break;
-                case DiffCommandId:
-                case CtxtDiffCommandId:
-                    {
-                        command.Text = GetCommandText(command.CommandID.ID);
-                        command.Enabled = useReadOnlyFlag ? !isReadOnly : true;
-                    }
-                    break;
-                case HistoryCommandId:
-                case CtxtHistoryCommandId:
-                    {
-                        command.Text = GetCommandText(command.CommandID.ID);
-                        command.Enabled = true;
-                    }
-                    break;
-                case TimelapseViewCommandId:
-                case CtxtTimelapseViewCommandId:
-                    {
-                        command.Text = GetCommandText(command.CommandID.ID);
-                        command.Enabled = true;
-                    }
-                    break;
-                case RevisionGraphCommandId:
-                case CtxtRevisionGraphCommandId:
-                    {
-                        command.Text = GetCommandText(command.CommandID.ID);
-                        command.Enabled = true;
                     }
                     break;
                 case AddCommandId:
@@ -470,8 +386,6 @@ namespace SDEditVS
                         command.Text = GetCommandText(command.CommandID.ID);
                         command.Enabled = true;
                     }
-                    break;
-                default:
                     break;
             }
         }
@@ -553,14 +467,6 @@ namespace SDEditVS
                         handler = (Runner.RunnerResult result) => HandleCheckOutRunnerResult(result, fileName);
                     }
                     break;
-                case RevertIfUnchangedCommandId:
-                case CtxtRevertIfUnchangedCommandId:
-                    {
-                        commandline = string.Format("SD {0} revert -a \"{1}\"", globalOptions, filePath);
-
-                        handler = CreateCommandRunnerResultHandler(GetBriefCommandDescription(commandId, filePath));
-                    }
-                    break;
                 case RevertCommandId:
                 case CtxtRevertCommandId:
                     {
@@ -578,34 +484,6 @@ namespace SDEditVS
                             commandline = string.Format("SD {0} revert \"{1}\"", globalOptions, filePath);
                             handler = CreateCommandRunnerResultHandler(GetBriefCommandDescription(commandId, filePath));
                         }
-                    }
-                    break;
-                case DiffCommandId:
-                case CtxtDiffCommandId:
-                    {
-                        commandline = string.Format("SDvc {0} diffhave \"{1}\"", globalOptions, filePath);
-                        handler = CreateCommandRunnerResultHandler(GetBriefCommandDescription(commandId, filePath));
-                    }
-                    break;
-                case HistoryCommandId:
-                case CtxtHistoryCommandId:
-                    {
-                        commandline = string.Format("SDvc {0} history \"{1}\"", globalOptions, filePath);
-                        handler = CreateCommandRunnerResultHandler(GetBriefCommandDescription(commandId, filePath));
-                    }
-                    break;
-                case TimelapseViewCommandId:
-                case CtxtTimelapseViewCommandId:
-                    {
-                        commandline = string.Format("SDvc {0} timelapse \"{1}\"", globalOptions, filePath);
-                        handler = CreateCommandRunnerResultHandler(GetBriefCommandDescription(commandId, filePath));
-                    }
-                    break;
-                case RevisionGraphCommandId:
-                case CtxtRevisionGraphCommandId:
-                    {
-                        commandline = string.Format("SDvc {0} revgraph \"{1}\"", globalOptions, filePath);
-                        handler = CreateCommandRunnerResultHandler(GetBriefCommandDescription(commandId, filePath));
                     }
                     break;
                 case AddCommandId:
@@ -637,11 +515,9 @@ namespace SDEditVS
                 case OpenInSDVCommandId:
                 case CtxtOpenInSDVCommandId:
                     {
-                        commandline = string.Format("SDv {0} -s \"{1}\"", globalOptions, filePath);
+                        commandline = string.Format("sdv \"{1}\"", globalOptions, filePath);
                         handler = CreateCommandRunnerResultHandler(GetBriefCommandDescription(commandId, filePath));
                     }
-                    break;
-                default:
                     break;
             }
 
@@ -882,92 +758,6 @@ namespace SDEditVS
         private void DumpRunnerResult(UInt64 jobId, string prefix, IEnumerable<string> lines)
         {
             foreach (string line in lines) OutputWindow.WriteLine("{0}: {1}: {2}", jobId, prefix, line);
-        }
-
-        /// <summary>
-        /// Called before menu button is shown so we can update text and active state
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnBeforeQueryStatusWorkspace(object sender, EventArgs e)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-            SDEditVS package = _package as SDEditVS;
-            var myCommand = sender as OleMenuCommand;
-            if (null != myCommand)
-            {
-                int workspaceIndex = GetWorkspaceIndexForCommandId(myCommand.CommandID.ID);
-                string text = package.GetWorkspaceName(workspaceIndex);
-                myCommand.Visible = (text.Length > 0);
-                myCommand.Text = text;
-
-                if (_dte.Solution != null && _dte.Solution.FileName.Length > 0)
-                {
-                    myCommand.Checked = (package.SelectedWorkspace == workspaceIndex);
-                    myCommand.Enabled = true;
-                }
-                else
-                {
-                    myCommand.Enabled = false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// This function is the callback used to execute the command when the menu item is clicked.
-        /// See the constructor to see how the menu item is associated with this function using
-        /// OleMenuCommandService service and MenuCommand class.
-        /// </summary>
-        /// <param name="sender">Event sender.</param>
-        /// <param name="e">Event args.</param>
-        private void ExecuteWorkspace(object sender, EventArgs e)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-            SDEditVS package = _package as SDEditVS;
-            var myCommand = sender as OleMenuCommand;
-            if (null != myCommand)
-            {
-                if (_dte.Solution != null && _dte.Solution.FileName.Length > 0)
-                {
-                    int workspaceId = GetWorkspaceIndexForCommandId(myCommand.CommandID.ID);
-                    package.SelectedWorkspace = workspaceId;
-                    myCommand.Checked = true;
-                }
-            }
-        }
-
-        private int GetWorkspaceIndexForCommandId(int commandId)
-        {
-            int index;
-            switch (commandId)
-            {
-                case WorkspaceUseEnvironmentCommandId:
-                    index = -1;
-                    break;
-
-                case Workspace1CommandId:
-                    index = 0;
-                    break;
-                case Workspace2CommandId:
-                    index = 1;
-                    break;
-                case Workspace3CommandId:
-                    index = 2;
-                    break;
-                case Workspace4CommandId:
-                    index = 3;
-                    break;
-                case Workspace5CommandId:
-                    index = 4;
-                    break;
-                case Workspace6CommandId:
-                    index = 5;
-                    break;
-                default:
-                    throw new IndexOutOfRangeException();
-
-            }
-            return index;
         }
     }
 }
